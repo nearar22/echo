@@ -1,24 +1,21 @@
 # ECHO
 
-```
-+------------------------------------------------------+
-|  ECHO  -  a cooperative word game for two            |
-|  Players: 2 (co-op)   Length: one round   Ages: all  |
-|  Dealer: an AI judge   Table: a smart contract       |
-+------------------------------------------------------+
-```
-
-A quickstart card. Read it the way you would read the rules tucked inside a
-board game box. Everything below is exactly what the on-chain contract does.
+A cooperative word game for two players, refereed by an AI judge and run as a
+smart contract. One round, no winner and no loser, only a pair that either
+thinks alike or does not. Read on for setup, the goal, your turn, and scoring,
+the way you would skim the rules slipped inside a board-game box. Everything
+below is exactly what the on-chain contract does.
 
 ## SETUP
 
 One player opens a round by setting a connecting PROMPT (for example, "something
-you find at the beach") and secretly choosing a single WORD. The contract seals
-that word; no one, and no view of the table, can see it while the round waits for
-a partner. A second player joins and adds their own single word, blind, without
-ever seeing the first. There are no deposits and no stakes; you pay only the
-network fee to play.
+you find at the beach") and secretly choosing a single WORD. The table is the
+contract at
+[`0x8EB3b0855793a2290641B87Ed0Be189304b632C9`](https://explorer-bradbury.genlayer.com/address/0x8EB3b0855793a2290641B87Ed0Be189304b632C9),
+which seals that word; no one, and no view of the table, can see it while the
+round waits for a partner. A second player joins and adds their own single word,
+blind, without ever seeing the first. There are no deposits and no stakes; you
+pay only the network fee to play.
 
 ## GOAL
 
@@ -37,7 +34,9 @@ answer_round(round_id, second_word)   seat two, blind, settles the round
 A word must be a single token, no spaces (guarded before anything runs). Seat
 two must be a different address than seat one; the contract refuses a player
 trying to fill both seats. The moment the second word lands, both words flip
-face-up together and the judge rules.
+face-up together and the judge rules. The first round ever dealt at this table
+was opened by transaction
+[`0xaa4c7c91`](https://explorer-bradbury.genlayer.com/tx/0xaa4c7c910f20d1d79acf47977cdc3858ccc33e282fedda317cb6ebd62551c666).
 
 ## SCORING
 
@@ -94,11 +93,3 @@ the chain directly; an AI write takes a few minutes, and because the installed
 client can raise on the submission receipt while the transaction is still live,
 the table confirms a result by watching the round flip to settled on-chain
 rather than trusting the write to return.
-
----
-
-Table on-chain at
-[`0x8EB3b0855793a2290641B87Ed0Be189304b632C9`](https://explorer-bradbury.genlayer.com/address/0x8EB3b0855793a2290641B87Ed0Be189304b632C9).
-First round dealt in transaction
-[`0xaa4c7c910f20d1d79acf47977cdc3858ccc33e282fedda317cb6ebd62551c666`](https://explorer-bradbury.genlayer.com/tx/0xaa4c7c910f20d1d79acf47977cdc3858ccc33e282fedda317cb6ebd62551c666).
-The full rules as the contract enforces them are in `contracts/contract.py`.
