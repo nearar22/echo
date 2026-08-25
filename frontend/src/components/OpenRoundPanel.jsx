@@ -5,10 +5,10 @@ import { WordField, PromptField } from './ui/TextField.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import { useOpenRound } from '../hooks/useOpenRound.js';
 import { useToast } from './Toast.jsx';
-import { cleanWord, wordError } from '../lib/format.js';
+import { cleanWord, promptError, wordError, walletError, sameAddr } from '../lib/format.js';
 
 const MAX_PROMPT = 200;
-const MAX_WORD = 40;
+const MAX_WORD = 30;
 
 // Mode one: open a NEW round with a connecting prompt and your blind word. The
 // word is sealed on submit and stays hidden until a second player answers.
@@ -16,6 +16,7 @@ export default function OpenRoundPanel({ open, onClose, wallet, controls, onConf
   const toast = useToast();
   const [prompt, setPrompt] = useState('');
   const [word, setWord] = useState('');
+  const [invitedWallet, setInvitedWallet] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [touched, setTouched] = useState(false);
 
@@ -35,14 +36,21 @@ export default function OpenRoundPanel({ open, onClose, wallet, controls, onConf
 
   const busy = state.phase === 'wallet' || state.phase === 'submitting';
 
-  const pErr = touched && !cleanWord(prompt) ? 'A round needs a connecting prompt.' : null;
+  const pErr = touched ? promptError(prompt) : null;
   const wErr = touched ? wordError(word) : null;
-  const valid = useMemo(() => !!cleanWord(prompt) && !wordError(word), [prompt, word]);
+  const inviteErr = touched
+    ? walletError(invitedWallet) || (sameAddr(invitedWallet, wallet.address) ? 'Invite a different wallet.' : null)
+    : null;
+  const valid = useMemo(
+    () => !promptError(prompt) && !wordError(word) && !walletError(invitedWallet) && !sameAddr(invitedWallet, wallet.address),
+    [prompt, word, invitedWallet, wallet.address]
+  );
 
   useEffect(() => {
     if (!open) {
       setPrompt('');
       setWord('');
+      setInvitedWallet('');
       setTouched(false);
       setConfirmOpen(false);
       reset();
@@ -70,6 +78,7 @@ export default function OpenRoundPanel({ open, onClose, wallet, controls, onConf
     const ok = await openRound(wallet.address, {
       prompt: cleanWord(prompt),
       firstWord: cleanWord(word),
+      invitedWallet: cleanWord(invitedWallet),
     });
     if (!ok) {
       toast.update('open-round', {
@@ -97,8 +106,8 @@ export default function OpenRoundPanel({ open, onClose, wallet, controls, onConf
             <h2 className="font-display text-2xl font-extrabold text-ink">Open a round</h2>
           </div>
           <p className="mt-1.5 text-sm text-ink-soft">
-            Take seat one. Set a connecting prompt and seal a single blind word. A second player adds
-            theirs, then the judge rules how closely you echo.
+            Take seat one, invite a specific partner, and seal a blind word. Only that wallet can
+            answer, preventing an outsider from taking their place.
           </p>
 
           {state.phase === 'confirmed' ? (
@@ -153,12 +162,22 @@ export default function OpenRoundPanel({ open, onClose, wallet, controls, onConf
                 hint="A single token, no spaces. It stays sealed until seat two answers."
                 disabled={busy}
               />
+              <WordField
+                id="invited-wallet"
+                label="Invited seat-two wallet"
+                value={invitedWallet}
+                onChange={setInvitedWallet}
+                max={42}
+                error={inviteErr}
+                hint="Only this wallet can answer the round. The invitation cannot be replaced."
+                disabled={busy}
+              />
 
               <div className="flex items-start gap-2 rounded-xl border-2 border-teal/50 bg-teal/10 p-3 text-sm text-ink-soft">
                 <Eye size={16} className="mt-0.5 shrink-0 text-teal-deep" />
                 <span>
-                  Blind submission: you will not see seat two's word, and they will not see yours,
-                  until both flip face-up together at settlement.
+                  The public interface withholds both words until settlement. On-chain data remains
+                  public, so this is gameplay concealment rather than cryptographic secrecy.
                 </span>
               </div>
 
@@ -203,6 +222,7 @@ export default function OpenRoundPanel({ open, onClose, wallet, controls, onConf
           <span className="font-display text-lg font-black text-magenta-deep">{cleanWord(word)}</span>.
           Once sealed it cannot be changed, and it stays hidden until a second player answers.
         </p>
+        <p className="mt-3 font-mono text-xs">Invited wallet: {cleanWord(invitedWallet)}</p>
       </ConfirmDialog>
     </>
   );

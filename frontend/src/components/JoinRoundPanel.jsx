@@ -10,7 +10,7 @@ import { useAnswerRound } from '../hooks/useAnswerRound.js';
 import { useToast } from './Toast.jsx';
 import { cleanWord, wordError, sameAddr, shortAddr } from '../lib/format.js';
 
-const MAX_WORD = 40;
+const MAX_WORD = 30;
 
 // Mode two: JOIN an awaiting round. Seat two adds the second blind word, which
 // triggers THE AI consensus write. Seat one cannot fill seat two (the contract
@@ -39,6 +39,7 @@ export default function JoinRoundPanel({ open, onClose, wallet, round, controls,
   });
 
   const isSeatOne = round && wallet.address && sameAddr(round.seatOne, wallet.address);
+  const isInvited = round && wallet.address && sameAddr(round.invitedSeatTwo, wallet.address);
   const busy = state.phase === 'wallet' || state.phase === 'consensus';
   const wErr = touched ? wordError(word) : null;
   const valid = useMemo(() => !wordError(word), [word]);
@@ -61,7 +62,7 @@ export default function JoinRoundPanel({ open, onClose, wallet, round, controls,
       wallet.connect();
       return;
     }
-    if (isSeatOne) return;
+    if (!isInvited) return;
     setConfirmOpen(true);
   };
 
@@ -106,6 +107,9 @@ export default function JoinRoundPanel({ open, onClose, wallet, round, controls,
             <span className="font-mono">{shortAddr(round.seatOne)}</span>. Add your blind word to
             trigger the judge.
           </p>
+          <p className="mt-1 text-xs text-ink-faint">
+            Reserved for <span className="font-mono">{shortAddr(round.invitedSeatTwo)}</span>
+          </p>
 
           <div className="mt-5 rounded-2xl border-2 border-ink/90 bg-cream px-4 py-3 shadow-block-sm">
             <p className="text-center text-xs font-bold uppercase tracking-wider text-magenta-deep">
@@ -141,12 +145,12 @@ export default function JoinRoundPanel({ open, onClose, wallet, round, controls,
             <div className="mt-6 rounded-2xl border-2 border-ink/80 bg-cream p-7">
               <ConsensusStage liveStatus={state.liveStatus} />
             </div>
-          ) : isSeatOne ? (
+          ) : wallet.address && !isInvited ? (
             <div className="mt-6 flex items-start gap-2 rounded-2xl border-2 border-ink/80 bg-sunflower/30 p-4 text-sm text-ink">
               <AlertCircle size={18} className="mt-0.5 shrink-0 text-magenta-deep" />
               <span>
-                This is your own round. Seat one cannot also fill seat two. Share it with another
-                player, or open a different round to answer with a separate address.
+                This round is read-only for your wallet. Only the seat-two wallet fixed by the opener
+                can answer, so an outsider cannot replace the intended partner.
               </span>
             </div>
           ) : (

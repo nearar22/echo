@@ -1,14 +1,14 @@
 import { createClient } from 'genlayer-js';
-import { testnetBradbury } from 'genlayer-js/chains';
+import { studionet } from 'genlayer-js/chains';
 
-export const CONTRACT_ADDRESS = '0x8EB3b0855793a2290641B87Ed0Be189304b632C9';
-export const DEPLOY_TX = '0xaa4c7c910f20d1d79acf47977cdc3858ccc33e282fedda317cb6ebd62551c666';
-export const EXPLORER = 'https://explorer-bradbury.genlayer.com';
-export const FAUCET = 'https://testnet-faucet.genlayer.foundation/';
-export const RPC_URL = 'https://rpc-bradbury.genlayer.com';
-export const NETWORK_NAME = 'Bradbury';
-export const CHAIN_ID = 4221;
-export const CHAIN_ID_HEX = '0x107D';
+export const CONTRACT_ADDRESS = '0xABe24bc7dCBD23110205141590294Fb6E5E87CC2';
+export const DEPLOY_TX = '0xe79c9c8d9f5b85d65f08918d1cc0068b4ddd46abe2b0f0478fbfc766f3a95929';
+export const EXPLORER = 'https://explorer-studio.genlayer.com';
+export const FAUCET = 'https://studio.genlayer.com/';
+export const RPC_URL = 'https://studio.genlayer.com/api';
+export const NETWORK_NAME = 'GenLayer Studio';
+export const CHAIN_ID = 61999;
+export const CHAIN_ID_HEX = '0x' + CHAIN_ID.toString(16);
 
 export const addressUrl = (addr) => `${EXPLORER}/address/${addr}`;
 export const txUrl = (hash) => `${EXPLORER}/tx/${hash}`;
@@ -48,8 +48,12 @@ export const BANDS = {
 
 export const bandOf = (band) => BANDS[String(band)] || BANDS.miss;
 
-export const readClient = createClient({ chain: testnetBradbury });
-export const makeWalletClient = (account) => createClient({ chain: testnetBradbury, account });
+export const readClient = createClient({ chain: studionet });
+export const makeWalletClient = (account, provider) => {
+  const walletProvider = provider || (typeof window !== 'undefined' ? window.ethereum : null);
+  if (!walletProvider) throw new Error('Browser wallet provider is unavailable.');
+  return createClient({ chain: studionet, account, provider: walletProvider });
+};
 
 // Reads can hit transient RPC errors; retry with exponential backoff.
 export async function withRpcRetry(fn, tries = 5) {
@@ -99,6 +103,7 @@ export function normRound(raw) {
     prompt: asString(pick(raw, 'prompt')),
     status: asString(pick(raw, 'status')) || 'awaiting',
     seatOne: asString(pick(raw, 'seatOne')),
+    invitedSeatTwo: asString(pick(raw, 'invitedSeatTwo')),
     seatTwo: asString(pick(raw, 'seatTwo')),
     band: asString(pick(raw, 'band')),
     proximity,
@@ -106,6 +111,7 @@ export function normRound(raw) {
     wordOne: asString(pick(raw, 'wordOne')),
     wordTwo: asString(pick(raw, 'wordTwo')),
     seq: asNumber(pick(raw, 'seq')),
+    validatorAudit: pick(raw, 'validatorAudit') || {},
   };
 }
 
@@ -121,6 +127,9 @@ export async function fetchStats() {
     rounds: asNumber(pick(raw, 'rounds')),
     settled: asNumber(pick(raw, 'settled')),
     wins: asNumber(pick(raw, 'wins')),
+    matches: asNumber(pick(raw, 'matches')),
+    near: asNumber(pick(raw, 'near')),
+    misses: asNumber(pick(raw, 'misses')),
   };
 }
 

@@ -1,0 +1,58 @@
+{
+  "contract": "0xABe24bc7dCBD23110205141590294Fb6E5E87CC2",
+  "wallets": {
+    "opener": "0x1d103a2c34aDFAcD1f5fAC54B80caB2776265a7e",
+    "invited": "0x5f37cEc7B4aC9081Bc83F28f4a033a8a6F3BA853",
+    "outsider": "0xA3B244fA348DDc8210Ea9D6952c512d344b8e234"
+  },
+  "transactions": {
+    "open": {
+      "hash": "0x335c0acb342e443f48d309fa13fa95f7705accdaf4751e7f88105ee23a7a5335",
+      "status": "ACCEPTED"
+    },
+    "outsider": {
+      "hash": "0xddc7641ce7ec51b0ded08b4b8345f4d4ac634eaee99e2515df3b35d2e00ada3b",
+      "status": "ACCEPTED"
+    },
+    "answer": {
+      "hash": "0x50ea754a607dd20f24315a7c5361dd02c785789da42872d522489f95dbfbef1d",
+      "status": "ACCEPTED"
+    }
+  },
+  "round": {
+    "band": "match",
+    "id": "r-1",
+    "invitedSeatTwo": "0x5f37cec7b4ac9081bc83f28f4a033a8a6f3ba853",
+    "link": "\"Ocean\" and \"sea\" both denote large bodies of saltwater and are often used interchangeably; a sea is usually a subdivision of an ocean, making them nearly synonymous in this context.",
+    "prompt": "Something naturally associated with the sea",
+    "proximity": 95,
+    "seatOne": "0x1d103a2c34adfacd1f5fac54b80cab2776265a7e",
+    "seatTwo": "0x5f37cec7b4ac9081bc83f28f4a033a8a6f3ba853",
+    "seq": 1,
+    "status": "settled",
+    "validatorAudit": {
+      "exactBand": "checked",
+      "mode": "non-comparative",
+      "semanticLink": "checked",
+      "thresholds": "checked"
+    },
+    "wordOne": "ocean",
+    "wordTwo": "sea"
+  },
+  "stats": {
+    "matches": 1,
+    "misses": 0,
+    "near": 0,
+    "rounds": 1,
+    "settled": 1,
+    "wins": 1
+  },
+  "assertions": {
+    "wordsWithheldUntilSettlement": true,
+    "outsiderRejected": true,
+    "invitedWalletFilledSeat": true,
+    "bothWordsRevealed": true,
+    "validatorAuditPresent": true,
+    "statsSettled": true
+  }
+}

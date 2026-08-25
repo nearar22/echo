@@ -27,7 +27,7 @@ export function useOpenRound({ onConfirmed, onStart, onSettle } = {}) {
   }, []);
 
   const open = useCallback(
-    async (account, { prompt, firstWord }) => {
+    async (account, { prompt, firstWord, invitedWallet }) => {
       if (busy.current) return false;
       busy.current = true;
       onStart?.();
@@ -46,7 +46,7 @@ export function useOpenRound({ onConfirmed, onStart, onSettle } = {}) {
         hash = await client.writeContract({
           address: CONTRACT_ADDRESS,
           functionName: 'open_round',
-          args: [prompt, firstWord],
+          args: [prompt, firstWord, invitedWallet],
           value: 0n,
         });
       } catch (e) {
