@@ -1,6 +1,7 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 from genlayer import *
 import json
+import hashlib
 
 # Echo is a fixed two-wallet semantic convergence round. The opener binds seat
 # two at creation, which prevents an outsider from front-running the intended
@@ -45,6 +46,17 @@ def _word(raw, seat):
     if any(ch not in allowed for ch in word) or not any(ch.isalnum() for ch in word):
         raise gl.vm.UserError(ERR_EXPECTED + " A word may use only letters, numbers, apostrophes, or hyphens")
     return word
+
+
+def _commitment(raw):
+    value = _ascii(raw, 64).lower()
+    if len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value):
+        raise gl.vm.UserError(ERR_EXPECTED + " Seat one requires a SHA-256 commitment")
+    return value
+
+
+def _digest(word, nonce):
+    return hashlib.sha256((word + ":" + _ascii(nonce, 100)).encode()).hexdigest()
 
 
 def _coerce(raw):
@@ -131,11 +143,11 @@ class Echo(gl.Contract):
         return _normalize(agreed)
 
     @gl.public.write
-    def open_round(self, prompt: str, first_word: str, invited_wallet: str) -> dict:
+    def open_round(self, prompt: str, first_word_commitment: str, invited_wallet: str) -> dict:
         prompt_c = _ascii(prompt, MAX_PROMPT)
         if len(prompt_c) < 12:
             raise gl.vm.UserError(ERR_EXPECTED + " Describe the connecting prompt in at least 12 characters")
-        word_c = _word(first_word, "Seat one")
+        commitment = _commitment(first_word_commitment)
         opener = gl.message.sender_address.as_hex.lower()
         invited = _wallet(invited_wallet)
         if invited == opener:
@@ -152,10 +164,10 @@ class Echo(gl.Contract):
             "seatOne": opener, "invitedSeatTwo": invited, "seatTwo": "",
             "band": "", "proximity": -1, "link": "",
             "wordOne": "", "wordTwo": "", "seq": seq,
-            "validatorAudit": {},
+            "commitment": commitment, "validatorAudit": {},
         }
         self.rounds[round_id] = json.dumps(public)
-        self.sealed_words[round_id] = json.dumps({"wordOne": word_c, "wordTwo": ""})
+        self.sealed_words[round_id] = json.dumps({"wordTwo": ""})
         self.active_by_opener[opener] = round_id
         self.round_ids.append(round_id)
         self.total_rounds += u256(1)
@@ -173,12 +185,28 @@ class Echo(gl.Contract):
             raise gl.vm.UserError(ERR_EXPECTED + " Only the invited seat-two wallet may answer")
         word_c = _word(second_word, "Seat two")
         sealed = json.loads(self.sealed_words[round_id])
-        word_one = sealed["wordOne"]
-        result = self._converge(public["prompt"], word_one, word_c)
-
         sealed["wordTwo"] = word_c
         self.sealed_words[round_id] = json.dumps(sealed)
         public["seatTwo"] = sender
+        public["status"] = "awaiting_reveal"
+        self.rounds[round_id] = json.dumps(public)
+        return public
+
+    @gl.public.write
+    def reveal_round(self, round_id: str, first_word: str, nonce: str) -> dict:
+        if round_id not in self.rounds:
+            raise gl.vm.UserError(ERR_EXPECTED + " Unknown round")
+        public = json.loads(self.rounds[round_id])
+        if public["status"] != "awaiting_reveal":
+            raise gl.vm.UserError(ERR_EXPECTED + " This round is not awaiting reveal")
+        if gl.message.sender_address.as_hex.lower() != public["seatOne"]:
+            raise gl.vm.UserError(ERR_EXPECTED + " Only seat one may reveal")
+        word_one = _word(first_word, "Seat one")
+        if _digest(word_one, nonce) != public["commitment"]:
+            raise gl.vm.UserError(ERR_EXPECTED + " Reveal does not match the original commitment")
+        sealed = json.loads(self.sealed_words[round_id])
+        word_c = sealed["wordTwo"]
+        result = self._converge(public["prompt"], word_one, word_c)
         public["status"] = "settled"
         public["band"] = result["band"]
         public["proximity"] = result["proximity"]
@@ -187,7 +215,7 @@ class Echo(gl.Contract):
         public["wordTwo"] = word_c
         public["validatorAudit"] = {
             "mode": "non-comparative", "exactBand": "checked",
-            "thresholds": "checked", "semanticLink": "checked",
+            "thresholds": "checked", "semanticLink": "checked", "commitmentVerified": True,
         }
         self.rounds[round_id] = json.dumps(public)
         self.active_by_opener[public["seatOne"]] = ""
@@ -202,7 +230,7 @@ class Echo(gl.Contract):
 
     def _public_view(self, round_id):
         public = json.loads(self.rounds[round_id])
-        if public["status"] == "awaiting":
+        if public["status"] != "settled":
             public["wordOne"] = ""
             public["wordTwo"] = ""
         return public

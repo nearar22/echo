@@ -75,9 +75,15 @@ export default function OpenRoundPanel({ open, onClose, wallet, controls, onConf
       title: 'Opening round',
       message: 'Confirm in your wallet, then the round seals on chain.',
     });
+    const nonceBytes = crypto.getRandomValues(new Uint8Array(24));
+    const nonce = Array.from(nonceBytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    const payload = new TextEncoder().encode(`${cleanWord(word)}:${nonce}`);
+    const digest = await crypto.subtle.digest('SHA-256', payload);
+    const commitment = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem(`echo-commit-${commitment}`, JSON.stringify({ word: cleanWord(word), nonce }));
     const ok = await openRound(wallet.address, {
       prompt: cleanWord(prompt),
-      firstWord: cleanWord(word),
+      commitment,
       invitedWallet: cleanWord(invitedWallet),
     });
     if (!ok) {

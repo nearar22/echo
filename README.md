@@ -14,8 +14,9 @@ A conventional contract can compare hashes or exact strings, but it cannot decid
 
 ## Lifecycle
 
-1. `open_round(prompt, first_word, invited_wallet)` fixes both participants and creates an awaiting round.
-2. The public views withhold both words while the round is open. This is interface-level concealment, not cryptographic secrecy.
+1. Seat one generates a random nonce locally and calls `open_round(prompt, sha256(word:nonce), invited_wallet)`; the word never appears in the opening transaction or contract state.
+2. Seat two answers the committed round without access to the first word or nonce.
+3. Seat one calls `reveal_round(round_id, first_word, nonce)`. The contract verifies the SHA-256 commitment before consensus can run.
 3. Only `invited_wallet` can call `answer_round`; outsiders and the opener cannot take seat two.
 4. Validators independently evaluate semantic proximity under exact thresholds.
 5. Settlement reveals both words, the proximity score, verdict band, explanation, and validator-audit record.
@@ -43,12 +44,12 @@ cd frontend
 npm run build
 ```
 
-The contract suite covers invalid inputs, fixed-seat authorization, word withholding, active-round limits, exact band boundaries, settlement audit data, and statistics. `scripts/live_verification.json` records a StudioNet lifecycle using an opener, an invited wallet, and an outsider. The outsider produced no state change; the invited wallet settled `ocean` / `sea` at 95/100.
+The contract suite covers commitment validation, fixed-seat authorization, pre-reveal word withholding, invalid-reveal rejection, opener-only reveal, and consensus settlement.
 
 ## Deployment
 
 - Network: GenLayer StudioNet (`61999`)
-- Contract: [`0xABe24bc7dCBD23110205141590294Fb6E5E87CC2`](https://explorer-studio.genlayer.com/address/0xABe24bc7dCBD23110205141590294Fb6E5E87CC2)
+- Contract: [`0x51e0163e89908E6d35e3B5E914E68C345AfEE56C`](https://explorer-studio.genlayer.com/address/0x51e0163e89908E6d35e3B5E914E68C345AfEE56C)
 - Deploy transaction: [`0xe79c9c8d9f5b85d65f08918d1cc0068b4ddd46abe2b0f0478fbfc766f3a95929`](https://explorer-studio.genlayer.com/tx/0xe79c9c8d9f5b85d65f08918d1cc0068b4ddd46abe2b0f0478fbfc766f3a95929)
 
 ## Repository map

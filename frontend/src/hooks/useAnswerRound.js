@@ -76,7 +76,7 @@ export function useAnswerRound({ onConfirmed, onStart, onSettle } = {}) {
       for (let i = 0; i < 80; i++) {
         try {
           const round = await fetchRound(roundId);
-          if (round && round.status === 'settled') {
+          if (round && (round.status === 'settled' || round.status === 'awaiting_reveal')) {
             setState((s) => ({ ...s, phase: 'confirmed', round }));
             onConfirmed?.(round);
             busy.current = false;

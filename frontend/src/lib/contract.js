@@ -1,8 +1,8 @@
 import { createClient } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 
-export const CONTRACT_ADDRESS = '0xABe24bc7dCBD23110205141590294Fb6E5E87CC2';
-export const DEPLOY_TX = '0xe79c9c8d9f5b85d65f08918d1cc0068b4ddd46abe2b0f0478fbfc766f3a95929';
+export const CONTRACT_ADDRESS = '0x51e0163e89908E6d35e3B5E914E68C345AfEE56C';
+export const DEPLOY_TX = '0xd91bc2409c537a0513e8b53717da3fa8255b0255fad084c3bc3c64dfc36c2893';
 export const EXPLORER = 'https://explorer-studio.genlayer.com';
 export const FAUCET = 'https://studio.genlayer.com/';
 export const RPC_URL = 'https://studio.genlayer.com/api';
@@ -112,6 +112,7 @@ export function normRound(raw) {
     wordTwo: asString(pick(raw, 'wordTwo')),
     seq: asNumber(pick(raw, 'seq')),
     validatorAudit: pick(raw, 'validatorAudit') || {},
+    commitment: asString(pick(raw, 'commitment')),
   };
 }
 

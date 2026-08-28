@@ -90,7 +90,8 @@ export default function JoinRoundPanel({ open, onClose, wallet, round, controls,
     onClose();
   };
 
-  const settled = state.phase === 'confirmed' && state.round;
+  const settled = state.phase === 'confirmed' && state.round?.status === 'settled' && state.round;
+  const awaitingReveal = state.phase === 'confirmed' && state.round?.status === 'awaiting_reveal';
 
   return (
     <>
@@ -140,6 +141,11 @@ export default function JoinRoundPanel({ open, onClose, wallet, round, controls,
               >
                 Back to the table
               </button>
+            </div>
+          ) : awaitingReveal ? (
+            <div className="mt-6 rounded-2xl border-2 border-teal/60 bg-teal/10 p-6 text-center">
+              <p className="font-display text-xl font-extrabold text-ink">Answer committed</p>
+              <p className="mt-2 text-sm text-ink-soft">Seat one's word was never exposed. The opener must now reveal the original word and nonce; the contract will verify the commitment before validators judge.</p>
             </div>
           ) : busy ? (
             <div className="mt-6 rounded-2xl border-2 border-ink/80 bg-cream p-7">

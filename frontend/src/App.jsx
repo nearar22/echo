@@ -15,6 +15,8 @@ import { TableSkeleton } from './components/Skeleton.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import { useWallet } from './hooks/useWallet.js';
 import { useEcho } from './hooks/useEcho.js';
+import { makeWalletClient, CONTRACT_ADDRESS } from './lib/contract.js';
+import { sameAddr } from './lib/format.js';
 
 function Echo() {
   const wallet = useWallet();
@@ -82,6 +84,15 @@ function Echo() {
 
   const showEmpty = !loading && rounds.length === 0 && !error;
 
+  const revealFocused = useCallback(async () => {
+    const saved = focusRound?.commitment && localStorage.getItem(`echo-commit-${focusRound.commitment}`);
+    if (!saved || !wallet.address) return;
+    const { word, nonce } = JSON.parse(saved);
+    const client = makeWalletClient(wallet.address);
+    await client.writeContract({ address: CONTRACT_ADDRESS, functionName: 'reveal_round', args: [focusRound.id, word, nonce], value: 0n });
+    setTimeout(refresh, 5000);
+  }, [focusRound, wallet.address, refresh]);
+
   return (
     <div className="relative flex min-h-screen flex-col">
       <DriftField />
@@ -147,6 +158,13 @@ function Echo() {
             >
               <Sparkles size={18} />
               Take seat two on this round
+            </button>
+          </div>
+        )}
+        {focusRound?.status === 'awaiting_reveal' && sameAddr(focusRound.seatOne, wallet.address) && (
+          <div className="mt-6 flex justify-center">
+            <button type="button" onClick={revealFocused} className="rounded-full border-2 border-ink/90 bg-magenta px-6 py-3 font-bold text-cream-panel shadow-block-sm">
+              Reveal commitment and settle
             </button>
           </div>
         )}
